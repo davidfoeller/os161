@@ -73,8 +73,11 @@ void V(struct semaphore *);
  * (should be) made internally.
  */
 struct lock {
-        char *lk_name;
-        // add what you need here
+  char *lk_name;
+  struct thread* lk_holder;
+  struct wchan* lk_wchan;
+  struct spinlock lk_lock;
+  volatile unsigned int lk_count;
         // (don't forget to mark things volatile as needed)
 };
 
