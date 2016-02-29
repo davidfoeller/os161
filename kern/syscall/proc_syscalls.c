@@ -91,4 +91,13 @@ sys_waitpid(pid_t pid,
   *retval = pid;
   return(0);
 }
+/* stub handler for fork() system call
+   Presently returns the constant 1 as the pid
+*/
+int
+sys_fork(pid_t *retval)
+{
 
+  *retval = 1;
+  return(0);
+}
