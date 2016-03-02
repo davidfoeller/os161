@@ -9,9 +9,15 @@
 #include <thread.h>
 #include <addrspace.h>
 #include <copyinout.h>
+/*adding mips/trapframe.h*/
+#include <mips/trapframe.h>
 
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
+
+  /* prototype for uproc_thread()*/
+
+void uproc_thread(void *temp_tf, unsigned long k);
 
 void sys__exit(int exitcode) {
 
@@ -91,13 +97,48 @@ sys_waitpid(pid_t pid,
   *retval = pid;
   return(0);
 }
+
+/* current uproc_thread code */
+
+void uproc_thread(void *temp_tf, unsigned long k)
+{
+  (void)k;
+  (void)temp_tf;
+
+  for(int i = 0; i < 100000; i++){}
+
+  kprintf("Child - I made it to the child user uproc_thread!\n");
+
+  thread_exit();
+}
+
 /* stub handler for fork() system call
-   Presently returns the constant 1 as the pid
+   modified to call uproc_thread and utilize trapframe
 */
 int
-sys_fork(pid_t *retval)
+sys_fork(struct trapframe* tf, pid_t *retval)
 {
+  struct trapframe* temp_tf;
 
-  *retval = 1;
+  DEBUG(DB_SYSCALL,"Syscall: sys_fork()\n");
+
+  temp_tf = kmalloc(sizeof(struct trapframe));
+
+  *temp_tf = *tf;
+  
+  char name[16];
+  int err = thread_fork(name, NULL, uproc_thread, temp_tf, 0);
+  if (err) {
+    return err;
+  }
+
+  kprintf("Parent returning after thread fork\n");
+
+  *retval = 2;
+
+  for(int i=0; i<100000; i++){}
+
   return(0);
 }
+
+
